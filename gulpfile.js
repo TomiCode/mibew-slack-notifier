@@ -12,7 +12,7 @@ gulp.task('prepare-release', function() {
   return eventStream.merge(
     getSources()
       .pipe(zip('mibdew-slack-notifier-' + version + '.zip')),
-    getSources
+    getSources()
       .pipe(tar('mibdew-slack-notifier-' + version + '.tar'))
       .pipe(gzip())
   )
@@ -31,6 +31,6 @@ var getSources = function() {
     {base: './'}
   )
   .pipe(rename(function(path) {
-    path.dirname = 'Mibew/Mibew/Plugin/SlackNotifier' + path.dirname;
+    path.dirname = 'Mibew/Mibew/Plugin/SlackNotifier/' + path.dirname;
   }));
 };

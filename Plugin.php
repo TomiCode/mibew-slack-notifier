@@ -57,13 +57,13 @@ class Plugin extends \Mibew\Plugin\AbstractPlugin implements \Mibew\Plugin\Plugi
 
     $ch = curl_init($config['webhook_url']);
     curl_setopt($ch, CURLOPT_CUSTOMREQUEST, "POST");
-    curl_setopt($ch, CURLOPT_POSTFIELDS, $data_fields);
+    curl_setopt($ch, CURLOPT_POSTFIELDS, ['payload' => json_encode($data_fields)]);
     curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
 
     $result = curl_exec($ch);
     curl_close($ch);
 
-    return $result;
+    return ($result == "ok")
   }
 
   public static function getVersion()
