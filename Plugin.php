@@ -22,8 +22,8 @@ class Plugin extends \Mibew\Plugin\AbstractPlugin implements \Mibew\Plugin\Plugi
    $this->initialized = true;
    $this->config = $config + array(
      'channel' => NULL,
-     'username' => NULL,
-     'message' => "A new visitor is waiting for an answer."
+     'username' => 'Mibew',
+     'message' => "A new visitor is waiting for an answer. (%usr%)."
    );
   }
 
@@ -42,28 +42,30 @@ class Plugin extends \Mibew\Plugin\AbstractPlugin implements \Mibew\Plugin\Plugi
   {
     $thread = $args['thread'];
     if ($thread->userId /* && invitationState == INVITATION_NOT_INVITED */ ) {
-      $this->sendSlackMessage();
+      $this->sendSlackMessage($thread->userName);
     }
   }
 
-  private function sendSlackMessage()
+  private function sendSlackMessage($newUser)
   {
-    $data_fields = [ 'text' => $config['message'] ];
-    if ($channel = $config['channel'])
-      $data_fields['channel'] = $channel;
+    $data_fields = [
+      'text' => str_replace('%usr%', $newUser, $config['message']),
+      'username' => $config['username'],
+      'channel' => $config['channel']
+    ];
 
-    if ($username = $config['username'])
-      $data_fields['username'] = $username;
+    if ($data = json_encode(array_filter($data_fields))) {
+      $ch = curl_init($config['webhook_url']);
+      curl_setopt($ch, CURLOPT_CUSTOMREQUEST, "POST");
+      curl_setopt($ch, CURLOPT_POSTFIELDS, ['payload' => $data]);
+      curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
 
-    $ch = curl_init($config['webhook_url']);
-    curl_setopt($ch, CURLOPT_CUSTOMREQUEST, "POST");
-    curl_setopt($ch, CURLOPT_POSTFIELDS, ['payload' => json_encode($data_fields)]);
-    curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+      $result = curl_exec($ch);
+      curl_close($ch);
 
-    $result = curl_exec($ch);
-    curl_close($ch);
-
-    return ($result == "ok")
+      return ($result == "ok");
+    }
+    return false;
   }
 
   public static function getVersion()
