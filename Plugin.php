@@ -23,7 +23,7 @@ class Plugin extends \Mibew\Plugin\AbstractPlugin implements \Mibew\Plugin\Plugi
    $this->config = $config + array(
      'channel' => NULL,
      'username' => 'Mibew',
-     'message' => "A new visitor is waiting for an answer. (%usr%)."
+     'message' => "A new visitor is waiting for an answer. (%usr% %ref%)."
    );
   }
 
@@ -46,16 +46,19 @@ class Plugin extends \Mibew\Plugin\AbstractPlugin implements \Mibew\Plugin\Plugi
     }
   }
 
-  private function sendSlackMessage($newUser)
+  private function sendSlackMessage($newUser, $referer)
   {
+    $message_content = str_replace('%usr%', $newUser, $this->config['message']);
+    $message_content = str_replace('%ref%', $referer, $message_content);
+
     $data_fields = [
-      'text' => str_replace('%usr%', $newUser, $config['message']),
-      'username' => $config['username'],
-      'channel' => $config['channel']
+      'text' => $message_content,
+      'username' => $this->config['username'],
+      'channel' => $this->config['channel']
     ];
 
     if ($data = json_encode(array_filter($data_fields))) {
-      $ch = curl_init($config['webhook_url']);
+      $ch = curl_init($this->config['webhook_url']);
       curl_setopt($ch, CURLOPT_CUSTOMREQUEST, "POST");
       curl_setopt($ch, CURLOPT_POSTFIELDS, ['payload' => $data]);
       curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
@@ -75,6 +78,6 @@ class Plugin extends \Mibew\Plugin\AbstractPlugin implements \Mibew\Plugin\Plugi
 
   public static function getSystemRequirements()
   {
-    return array( 'mibew' => '^2.1.0' );
+    return array('mibew' => '^2.1.0');
   }
 }
